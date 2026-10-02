@@ -30,6 +30,6 @@ pipeline/                               reproducible collection, parsing, traini
 ```
 
 ## Credits
-Built with [Perplexity Computer](https://www.perplexity.ai/computer). Credit to Claude Opus 5.5 (Medium), as designated by the project author. The measured Perplexity credit cost is listed in `methodology.html#credits`.
+Built with [Perplexity Computer](https://www.perplexity.ai/computer). Model: Claude Opus 5.5 (Medium). Build cost: **1,284.63 Perplexity Computer credits** (about $12.85), as reported by the author; details are in `methodology.html#credits`.
 
 Not affiliated with GMAT Club, Poets&Quants, U.S. News, GMAC or any school.

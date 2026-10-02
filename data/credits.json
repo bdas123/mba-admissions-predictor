@@ -1,5 +1,5 @@
 {
-  "total_display": "Pending: not yet reported by Perplexity usage analytics",
-  "models_display": "Pending: reported with the credit total",
-  "note": "This build ran on October 2, 2026. Perplexity's account usage analytics, last updated October 2, 2026 at 18:13 UTC, had not yet posted that day's usage when this page was published. The cost is not estimated; it will be filled in from measured analytics once available. Those analytics are account-level, so the figure will cover the build day's usage."
+  "total_display": "1,284.63 Perplexity Computer credits (1 credit = 1¢, so about $12.85)",
+  "models_display": "Claude Opus 5.5 (Medium), as reported by the project author",
+  "note": "The project author reported this build total from their Perplexity account on October 2, 2026. It covers the full build: data collection, modeling, the web app, methodology and GitHub publishing. Perplexity's account-level usage analytics had not yet posted October 2 data at publication, so this figure has not been independently cross-checked there."
 }
