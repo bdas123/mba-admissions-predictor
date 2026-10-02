@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Methodology &amp; transparency · MBA Odds Explorer</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="brand">
+    <svg width="26" height="26" viewBox="0 0 26 26" aria-label="logo"><rect x="1" y="1" width="24" height="24" rx="6" fill="none" stroke="#0f6e6a" stroke-width="2"/><path d="M6 18 L10 12 L14 15 L20 7" fill="none" stroke="#0f6e6a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    MBA Odds Explorer
+  </div>
+  <nav><a href="index.html">Explorer</a><a class="on" href="methodology.html">Methodology &amp; transparency</a><a href="https://github.com/bdas123/mba-admissions-predictor">GitHub</a></nav>
+</div></header>
+
+<main class="wrap doc">
+<h1>How the model was built, and where it can mislead you</h1>
+<p class="lede">This page documents every data source, modeling choice, evaluation result and known weakness. Numbers marked as live are read from the same <code>data/model.json</code> file the explorer uses, so the page and the app cannot disagree.</p>
+
+<div class="callout"><strong>Bottom line:</strong> GMAT, GPA, experience, round and school context explain part of the outcome. Cross-validated AUC is <b class="live" data-k="auc_lr">–</b>, compared with <b class="live" data-k="auc_base">–</b> using school context alone. Most of the outcome depends on what the data can’t see: essays, recommendations, interviews, career story and fit. Treat each result as a range, not a verdict.</div>
+
+<h2>How to use it</h2>
+<ol>
+  <li>Paste a sentence about yourself and select <em>Interpret my profile</em>. The interpreter uses transparent pattern rules that run in your browser and send nothing anywhere. It reads GMAT (scores ending in 0 are treated as GMAT Classic and converted with the GMAC concordance), GPA, years of experience, industry, round, home state and US/non-US status.</li>
+  <li>Adjust the sliders directly. Every chart updates immediately.</li>
+  <li>Use the dropdown to add schools from the 2026 U.S. News top 25 (26 schools, because of a tie at #25), plus Rice Jones. Remove any school with its button.</li>
+  <li>Read each card: the large number is the <strong>median</strong> of the distribution, and the highlighted bar is the bin containing it.</li>
+</ol>
+
+<h2>Data</h2>
+<h3>Applicant outcomes</h3>
+<p>Applicant outcomes come from public, self-reported profiles in the GMAT Club Decision Tracker. Each profile can include a GMAT score, GPA, years of experience, industry, country, application round and outcomes (admitted, denied, waitlisted, and scholarship as a share of tuition) for several schools. The pipeline read these pages through Perplexity’s content-fetch API and did not bypass bot protection or registration walls.</p>
+<p>Only structured profile fields are kept. Usernames, comments and free text are discarded during parsing. <strong>No row-level data is published in this repository</strong>; only model parameters and aggregate statistics appear here. The <code>pipeline/</code> folder lets anyone rebuild the dataset.</p>
+<p>The training set contains <b class="live" data-k="n_train">–</b> final decisions from <b class="live" data-k="n_app">–</b> applicants across <b class="live" data-k="n_sch">–</b> US full-time MBA programs. The cycles cover classes entering 2023–2026: <span class="live" data-k="intake">–</span>. A decision counts only when its final status is admitted or denied; waitlists without a resolution are excluded. GRE-only and test-waiver profiles are also excluded because the model is GMAT-based.</p>
+<h3>School and cycle context</h3>
+<p>For each school and cycle, the model uses applications received, the acceptance rate and the class GMAT average from <a href="https://poetsandquants.com/2026/08/02/acceptance-rates-yield-apps-at-the-top-100-u-s-mba-programs-for-2026/">Poets&amp;Quants’ 2026 acceptance-rate and application tables</a>. Class GMAT Classic averages were converted to Focus-equivalent values with the GMAC concordance. The class entering in 2026 uses the latest published 2025 cycle as a proxy, and the training data flags that substitution. Rankings come from the 2026 U.S. News Best Business Schools list, as compiled by <a href="https://www.clearadmit.com/mba-rankings/usnews/">Clear Admit</a>.</p>
+<h3>Tuition and official aid figures</h3>
+<p>Tuition and official aid figures come from each school’s own pages, linked on every card. When a school publishes aggregate scholarship figures, such as <a href="https://business.rice.edu/admissions-blog/guide-to-2025-full-time-MBA-scholarships">Rice</a> or <a href="https://blogs.mccombs.utexas.edu/mba-insider/funding-your-texas-mccombs-full-time-mba-investment-impact/">McCombs</a>, the model is calibrated to them. Dollar values are the predicted share of tuition × that school’s annual tuition × 2 years.</p>
+
+<h2>Admission model</h2>
+<p>The admission model is an L2-regularized logistic regression pooled across all programs. Pooling lets schools with few reports borrow strength from the rest of the data, and the school-cycle features carry selectivity. Its features are:</p>
+<ul>
+  <li>GMAT Focus relative to that school’s class reference, per 10 points</li>
+  <li>GPA, per 0.1, plus an indicator for a missing GPA</li>
+  <li>Years of experience and its square, since “too junior” and “too senior” both hurt</li>
+  <li>Round 1 or Round 3+</li>
+  <li>Non-US status</li>
+  <li>Industry group</li>
+  <li>The school’s logit acceptance rate that cycle</li>
+  <li>The log of the school’s applications that cycle</li>
+</ul>
+
+<h3>Correcting self-report bias</h3>
+<p>Admits post more often than denied applicants, so the tracker’s raw admit rate is <b class="live" data-k="train_rate">–</b>, far above real acceptance rates. The model applies King &amp; Zeng prior correction for each school: it shifts the intercept by logit(official rate) − logit(sample rate). That correction is exact if posting depends only on the outcome. Schools with few reports are pulled toward the pooled correction with weight n/(n+50); without that, Rice, whose sample contains only admits, would receive an extreme penalty.</p>
+
+<h3>Why it shows a distribution</h3>
+<p>The model was refit 300 times on bootstrap resamples of applicants, so one applicant’s several schools are resampled together. Each refit produces one probability for you, and the histogram shows all 300. A wide histogram means the data can’t pin your chance down.</p>
+<p>The spread reflects model uncertainty only. Even a 40% chance means a single application is either admitted or not.</p>
+
+<h3>Evaluation (5-fold cross-validation, grouped by applicant)</h3>
+<table id="evalTbl"><thead><tr><th>Model</th><th>AUC</th><th>Brier</th><th>Log loss</th></tr></thead><tbody></tbody></table>
+<p>Gradient boosting scores slightly higher, but the shipped model is logistic regression. Its coefficients are fully inspectable, it runs exactly in a browser, and its calibration is good. The calibration table below compares predicted probabilities with observed outcomes on held-out folds.</p>
+<table id="calTbl"><thead><tr><th>Mean predicted</th><th>Observed admit rate</th></tr></thead><tbody></tbody></table>
+
+<h3>What drives the estimate (explainability)</h3>
+<p>The table shows logistic regression odds ratios with 90% bootstrap intervals. Values above 1 raise your odds, values below 1 lower them, and intervals that cross 1 are not distinguishable from no effect.</p>
+<table id="coefTbl"><thead><tr><th>Feature</th><th class="num">Odds ratio</th><th class="num">90% interval</th></tr></thead><tbody></tbody></table>
+<p>As a cross-check, mean |SHAP| values from the gradient-boosting model show the same broad ordering:</p>
+<table id="shapTbl"><thead><tr><th>Feature</th><th class="num">Mean |SHAP|</th></tr></thead><tbody></tbody></table>
+<p>GMAT effects look modest because the sample is range-restricted: most people who post profiles already score near each school’s class average. The odds ratio describes the marginal effect within that range, not the effect of a far-below-median score. The application-volume coefficient is mostly a between-school effect, because the largest programs are also the most selective beyond their acceptance rates. Use the volume slider as a rough sensitivity check, not a causal lever.</p>
+
+<h3 id="extracurriculars">Extracurriculars</h3>
+<p>The project brief asked for extracurriculars to be factored in. The tracker has no structured extracurricular field, only optional notes. I tested keyword flags for volunteering, leadership, military service, entrepreneurship and athletics. Adding them left cross-validated AUC unchanged (<b class="live" data-k="auc_ec">–</b> with them, compared with <b class="live" data-k="auc_lr2">–</b> without), and some signs were implausible. That pattern suggests the flags capture who writes long posts, not real extracurricular strength. They are therefore <strong>excluded from the score</strong>. The interpreter still lists any extracurriculars it finds, because they matter in real admissions through essays and interviews.</p>
+
+<h2>Scholarship model (conditional on admission)</h2>
+<p>The scholarship estimate uses two parts, both fit on admitted applicants at merit-aid schools. Stanford GSB and Harvard are excluded because their fellowships depend on financial need, not stats.</p>
+<ol>
+  <li>P(any award): a logistic regression.</li>
+  <li>The award as a share of tuition, given an award: a ridge regression on the logit of the share, with residual noise.</li>
+</ol>
+<p>Each of the 300 bootstrap refits produces 10 simulated outcomes, and the histogram shows the share of simulations in each tuition band.</p>
+<p>Self-reported awards skew high, so each school’s offsets are solved to reproduce official aggregates when the school publishes them: Rice reports that 96% receive an award, with an average above $40k; McCombs reports that 88% receive an offer, averaging $19,080. Without official figures, the offsets reproduce the tracker sample’s own means, and the card says that estimate likely runs high.</p>
+<p class="live-block" id="schEval"></p>
+<p><strong>Honest assessment:</strong> stats predict <em>whether</em> you get an award moderately well. They predict <em>how large</em> the award will be barely better than simply guessing the median. The scholarship distribution is mostly driven by the school, with a modest stats adjustment; negotiation, competing offers and fellowships aren’t visible in the data.</p>
+
+<h2>Per-school data coverage</h2>
+<table id="covTbl"><thead><tr><th>School</th><th class="num">Tracker decisions</th><th class="num">Official accept rate</th><th class="num">Bias offset</th><th>Scholarship calibration</th></tr></thead><tbody></tbody></table>
+<p>Schools with fewer than 20 decisions rely mostly on the pooled model. UT Dallas Jindal shows official facts only, because it publishes no class GMAT figure and has almost no tracker data.</p>
+
+<h2>Known limitations</h2>
+<ul>
+  <li><strong>Selection bias:</strong> people who post profiles differ from typical applicants. The bias correction handles outcome-driven posting, but not posting driven by profile strength.</li>
+  <li><strong>Missing information:</strong> the data contains nothing about essays, recommendations, interviews, career goals, diversity factors, legacy status or employer brand.</li>
+  <li><strong>Self-reported values:</strong> fields are unverified, and the parser can occasionally misread a profile.</li>
+  <li><strong>Shifting cycles:</strong> application volumes and acceptance rates change, and the 2026 entry cycle uses 2025 values.</li>
+  <li><strong>Round effects:</strong> Round 1 includes early-action plans at some schools, so its effect is not purely about timing.</li>
+</ul>
+
+<h2 id="credits">Credits and build cost</h2>
+<p id="creditsText">Built with <a href="https://www.perplexity.ai/computer">Perplexity Computer</a>. Credit to Claude Opus 5.5 (Medium), as designated by the project author.</p>
+<table id="creditTbl"><thead><tr><th>Item</th><th>Value</th></tr></thead><tbody>
+  <tr><td>Perplexity Computer credits used (measured)</td><td id="credTotal">See note</td></tr>
+  <tr><td>Model mix in the measured build window</td><td id="credModels">See note</td></tr>
+  <tr><td>Measurement note</td><td id="credNote"></td></tr>
+</tbody></table>
+
+<h2>Reproduce it</h2>
+<pre>pip install scikit-learn shap pandas scipy
+# 1) collect tracker pages (pipeline/collect_example.py uses Perplexity's pplx_sdk content API)
+python pipeline/parse.py          # -> rows.json (structured fields only)
+python pipeline/build_ref.py      # -> school_ref.json from P&amp;Q tables
+python pipeline/train.py          # -> model.json, evaluation, coefficients, SHAP
+python pipeline/gen_schools.py    # -> data/schools.json (tuition and aid sources)
+python pipeline/export.py         # -> data/model.json for the site</pre>
+<p>This explorer is not affiliated with GMAT Club, Poets&amp;Quants, U.S. News, GMAC or any school.</p>
+</main>
+<script>
+fetch("data/model.json").then(r => r.json()).then(M => {
+  const set = (k, v) => document.querySelectorAll(`[data-k="${k}"]`).forEach(e => e.textContent = v);
+  set("auc_lr", M.eval.logistic_regression.auc.toFixed(3)); set("auc_lr2", M.eval.logistic_regression.auc.toFixed(3));
+  set("auc_base", M.eval.context_only_baseline.auc.toFixed(3)); set("auc_ec", M.eval.logistic_plus_extracurricular_keywords.auc.toFixed(3));
+  set("n_train", M.n_train.toLocaleString()); set("n_app", M.n_applicants.toLocaleString()); set("n_sch", M.n_schools);
+  set("train_rate", (100 * M.train_admit_rate).toFixed(0) + "%");
+  set("intake", Object.entries(M.intake_counts).map(([y, n]) => `${n} decisions for ${y} entry`).join(", "));
+  const names = {context_only_baseline: "School/cycle context only", logistic_regression: "Logistic regression (shipped)", gradient_boosting: "Gradient boosting (benchmark)", logistic_plus_extracurricular_keywords: "Logistic + extracurricular keywords", logistic_without_gmat: "Logistic without GMAT"};
+  document.querySelector("#evalTbl tbody").innerHTML = Object.entries(names).map(([k, n]) => `<tr><td>${n}</td><td>${M.eval[k].auc.toFixed(3)}</td><td>${M.eval[k].brier.toFixed(3)}</td><td>${M.eval[k].log_loss.toFixed(3)}</td></tr>`).join("");
+  document.querySelector("#calTbl tbody").innerHTML = M.eval.lr_calibration.map(c => `<tr><td>${(100*c.mean_pred).toFixed(0)}%</td><td>${(100*c.observed).toFixed(0)}%</td></tr>`).join("");
+  document.querySelector("#coefTbl tbody").innerHTML = M.coef_table.map(c => `<tr><td>${c.label}</td><td class="num">${c.odds_ratio_per_unit.toFixed(2)}</td><td class="num">${c.or_90ci[0].toFixed(2)}–${c.or_90ci[1].toFixed(2)}</td></tr>`).join("");
+  document.querySelector("#shapTbl tbody").innerHTML = M.gb_shap_importance.slice(0, 10).map(c => `<tr><td>${c.label}</td><td class="num">${c.mean_abs_shap.toFixed(3)}</td></tr>`).join("");
+  const e = M.sch_eval;
+  document.getElementById("schEval").innerHTML = `Scholarship training set: <b>${e.n_admits_with_scholarship_info}</b> admits with reported awards; <b>${(100*e.share_receiving_any).toFixed(0)}%</b> reported an award. P(any award) cross-validated AUC: <b>${e.any_award_auc}</b>. Award-size error: <b>${e.share_mae_pct_points}</b> percentage points mean absolute error, compared with <b>${e.share_mae_naive_median}</b> for always guessing the median.`;
+  fetch("data/schools.json").then(r => r.json()).then(S => {
+    const rows = Object.keys(S).sort((a, b) => parseInt(S[a].usnews_rank) - parseInt(S[b].usnews_rank)).map(k => {
+      const p = M.prior_correction[k] || {}; const o = M.sch_school_offsets[k] || {};
+      const basis = S[k].aid_basis === "need" ? "Need-based (not modeled)" : S[k].aid_basis === "official_only" ? "Not modeled" : S[k].aid_basis === "range_only" ? "Official range only (no reports)" : ({official: "Official aggregates", tracker_sample: "Tracker sample (may skew high)", pooled_only: "Pooled only"}[o.basis] || "–");
+      return `<tr><td>${S[k].name}</td><td class="num">${p.n ?? 0}</td><td class="num">${p.official_rate != null ? (100*p.official_rate).toFixed(1) + "%" : "–"}</td><td class="num">${p.offset != null ? p.offset.toFixed(2) : "–"}</td><td>${basis}</td></tr>`;
+    });
+    document.querySelector("#covTbl tbody").innerHTML = rows.join("");
+  });
+  fetch("data/credits.json").then(r => r.ok ? r.json() : null).then(C => {
+    if (!C) return;
+    document.getElementById("credTotal").textContent = C.total_display;
+    document.getElementById("credModels").textContent = C.models_display;
+    document.getElementById("credNote").textContent = C.note;
+  }).catch(() => {});
+});
+</script>
+</body>
+</html>

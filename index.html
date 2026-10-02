@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MBA Admissions &amp; Scholarship Explorer</title>
+<meta name="description" content="Explore estimated admission chances and scholarship distributions for Stanford GSB, MIT Sloan, Chicago Booth, Rice Jones and UT Austin McCombs, with a fully documented, explainable model.">
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>
+<script src="assets/app.js" defer></script>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="brand">
+    <svg width="26" height="26" viewBox="0 0 26 26" aria-label="logo"><rect x="1" y="1" width="24" height="24" rx="6" fill="none" stroke="#0f6e6a" stroke-width="2"/><path d="M6 18 L10 12 L14 15 L20 7" fill="none" stroke="#0f6e6a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    MBA Odds Explorer
+  </div>
+  <nav><a class="on" href="index.html">Explorer</a><a href="methodology.html">Methodology &amp; transparency</a><a href="https://github.com/bdas123/mba-admissions-predictor">GitHub</a></nav>
+</div></header>
+
+<main class="wrap">
+  <h1>See how your GMAT, GPA and profile shift your MBA odds</h1>
+  <p class="lede">Move the sliders or paste your profile. Pick schools from the dropdown to build your list. Each school shows two distributions: your estimated chance of admission, and the scholarship you might receive if admitted. The highlighted bar and large number show the median.</p>
+  <div class="banner">This is an estimate learned from self-reported applicant outcomes, not an admissions decision. Essays, recommendations, interviews and fit drive real outcomes and aren’t modeled. The <a href="methodology.html">methodology page</a> lists every assumption and limitation.</div>
+  <div class="stats">
+    <span>Trained on <b id="n-train">–</b> decisions</span><span><b id="n-app">–</b> applicants</span><span><b id="n-sch">–</b> US programs</span><span>Cross-validated AUC <b id="auc">–</b></span>
+  </div>
+
+  <div class="layout">
+    <aside class="panel">
+      <h2>Describe your profile</h2>
+      <textarea id="profile" placeholder="e.g. GMAT Focus 705, GPA 3.43 in petroleum engineering from UT Austin, 6 years in energy tech / machine learning, US citizen in Houston, applying Round 1. Volunteer at Austin Pets Alive.">GMAT Focus 705, GPA 3.43, 6 years in energy tech and machine learning, US citizen living in Houston, applying Round 1.</textarea>
+      <button id="interp-btn" type="button">Interpret my profile</button>
+      <div id="interp-out"></div>
+      <p class="hint">The interpreter reads your text with transparent pattern rules, entirely in your browser. Nothing is sent to a server or an AI service.</p>
+      <hr>
+      <div class="field"><label for="gmat">GMAT Focus <span id="gmatVal"></span></label><input id="gmat" type="range" min="505" max="805" step="10" value="705"></div>
+      <div class="field"><label for="gpa">Undergraduate GPA <span id="gpaVal"></span></label><input id="gpa" type="range" min="2.5" max="4.0" step="0.01" value="3.43"></div>
+      <div class="field"><label for="yoe">Years of work experience <span id="yoeVal"></span></label><input id="yoe" type="range" min="0" max="12" step="1" value="6"></div>
+      <div class="field"><label for="ind">Pre-MBA industry</label>
+        <select id="ind"><option value="other">Other</option><option value="consulting">Consulting</option><option value="finance">Finance / investing</option><option value="tech">Technology</option><option value="energy" selected>Energy</option><option value="public_service">Military / government / non-profit</option></select></div>
+      <div class="field"><label for="round">Application round</label>
+        <select id="round"><option value="1" selected>Round 1 / early</option><option value="2">Round 2</option><option value="3">Round 3 or later</option></select></div>
+      <label class="check"><input id="intl" type="checkbox"> Non-US applicant</label>
+      <div class="field"><label for="home">Home state (in-state tuition at public schools)</label>
+        <select id="home"><option value="none">Other / non-US</option><option value="TX" selected>Texas</option><option value="CA">California</option><option value="VA">Virginia</option><option value="MI">Michigan</option><option value="WA">Washington</option><option value="IN">Indiana</option><option value="NC">North Carolina</option><option value="GA">Georgia</option></select></div>
+      <div class="field"><label for="apps">Application volume vs latest cycle <span id="appsVal"></span></label><input id="apps" type="range" min="-25" max="25" step="5" value="0"></div>
+      <p class="hint">School context uses each program’s latest published cycle, the class that entered in 2025: applications, acceptance rate and class GMAT. Use the volume slider to test a busier or quieter year.</p>
+    </aside>
+    <div>
+      <div class="picker">
+        <label for="pick">Add a school (2026 U.S. News top 25, plus Rice)</label>
+        <div class="row"><select id="pick"></select><button id="add" type="button">Add to my list</button><button id="add-all" type="button" class="ghost">Add all</button></div>
+      </div>
+      <section id="cards" aria-live="polite"></section>
+    </div>
+  </div>
+</main>
+
+<footer class="site-foot"><div class="wrap">
+  Built with <a href="https://www.perplexity.ai/computer">Perplexity Computer</a>, with model work credited to Claude Opus 5.5 (Medium) by the author. Build cost and the model mix are reported on the <a href="methodology.html#credits">methodology page</a>. Data sources: GMAT Club Decision Tracker (self-reported), <a href="https://poetsandquants.com/2026/08/02/acceptance-rates-yield-apps-at-the-top-100-u-s-mba-programs-for-2026/">Poets&amp;Quants</a>, <a href="https://www.usnews.com/best-graduate-schools/top-business-schools">U.S. News</a> and official school pages. Not affiliated with any school.
+</div></footer>
+</body>
+</html>
