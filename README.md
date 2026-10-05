@@ -1,6 +1,6 @@
 # MBA Odds Explorer
 
-The MBA Odds Explorer is an explainable estimator of **admission chances** and **scholarships given admission**. It covers the 2026 U.S. News top 25 full-time MBA programs (26 schools, because of a tie at #25), plus Rice Jones and Stevens Institute of Technology (U.S. News #72, tie; added as a pooled, extrapolated estimate with no school-specific tracker data, see `methodology.html#stevens`).
+The MBA Odds Explorer is an explainable estimator of **admission chances** and **scholarships given admission**. It covers the 2026 U.S. News top 25 full-time MBA programs (26 schools, because of a tie at #25), plus Rice Jones and Stevens Institute of Technology (U.S. News #72, tie; added as a pooled, extrapolated estimate with no school-specific tracker data; its scholarship estimate is anchored to Stevens's award policy and a few reported awards under stated assumptions, see `methodology.html#stevens`).
 
 - **App:** `index.html` (GitHub Pages: `https://bdas123.github.io/mba-admissions-predictor/`)
 - **Methodology and transparency:** `methodology.html`, which documents data sources, modeling, evaluation, explainability, limitations and build credits.
@@ -27,7 +27,7 @@ data/model.json                         model parameters, evaluation, aggregates
 data/schools.json                       tuition, aid facts and source links per school
 data/credits.json                       measured build cost
 pipeline/                               reproducible collection, parsing, training and export scripts
-pipeline/add_stevens.py                 adds Stevens to the exported data (no retraining)
+pipeline/add_stevens.py                 adds Stevens to the exported data (no retraining; evidence-anchored scholarship offsets)
 ```
 
 ## Credits

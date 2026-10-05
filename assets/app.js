@@ -49,17 +49,21 @@ function admitDistribution(school, x) {
 
 function scholarshipDistribution(school, x) {
   const xsFull = featureVector(school, x);
-  const xs = M.sch_features.map((f) => xsFull[M.features.indexOf(f)]);
   const o = M.sch_school_offsets[school] || { any_offset: 0, share_offset: 0 };
+  // evidence-anchored schools clip applicant features to the training range (no extrapolation past it)
+  const xs = M.sch_features.map((f) => xsFull[M.features.indexOf(f)])
+    .map((v, i) => (o.clip_z && !["logit_acc", "log_apps"].includes(M.sch_features[i]) ? Math.max(-o.clip_z, Math.min(o.clip_z, v)) : v));
   const r = mulberry32(12345);
   const draws = [];
-  for (const b of M.sch_boot) {
-    const pAny = sigmoid(b.a0 + xs.reduce((s, v, i) => s + b.a[i] * v, 0) + o.any_offset);
-    const mu = b.b0 + xs.reduce((s, v, i) => s + b.b[i] * v, 0) + o.share_offset;
+  M.sch_boot.forEach((b, j) => {
+    // evidence-anchored schools (Stevens) carry one offset pair per refit, so assumption ranges show in the spread
+    const [oa, os] = o.boot_offsets ? o.boot_offsets[j] : [o.any_offset, o.share_offset];
+    const pAny = sigmoid(b.a0 + xs.reduce((s, v, i) => s + b.a[i] * v, 0) + oa);
+    const mu = b.b0 + xs.reduce((s, v, i) => s + b.b[i] * v, 0) + os;
     for (let k = 0; k < 10; k++) {
       draws.push(r() < pAny ? Math.min(1, sigmoid(mu + b.sigma * gauss(r))) : 0);
     }
-  }
+  });
   return draws;
 }
 
@@ -179,7 +183,7 @@ function cardHTML(s) {
     return head + `<p class="need">No model estimate: this program publishes no class GMAT figure and has almost no tracker decisions, so an estimate would be invented. Official facts: ${info.aid_fact} <a href="${info.aid_src}" target="_blank" rel="noopener">UT Dallas</a></p>`;
   }
   const off = M.sch_school_offsets[s] || {};
-  const flag = noSchModel(info) ? "" : off.basis === "official" ? "Calibrated to official aid statistics." : off.basis === "pooled_only" ? "Too few school-specific reports: pooled estimate only." : "Calibrated to tracker reports, which likely skew high.";
+  const flag = noSchModel(info) ? "" : off.basis === "official" ? "Calibrated to official aid statistics." : off.basis === "evidence_anchored" ? `Scholarship anchored to Stevens’s award policy and a few reported awards, with assumed ranges (<a href="methodology.html#stevens">methodology</a>).` : off.basis === "pooled_only" ? "Too few school-specific reports: pooled estimate only." : "Calibrated to tracker reports, which likely skew high.";
   const n = (M.prior_correction[s] || {}).n || 0;
   return head + `
     <div class="pair">
