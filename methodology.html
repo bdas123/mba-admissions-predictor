@@ -25,7 +25,7 @@
 <ol>
   <li>Paste a sentence about yourself and select <em>Interpret my profile</em>. The interpreter uses transparent pattern rules that run in your browser and send nothing anywhere. It reads GMAT (scores ending in 0 are treated as GMAT Classic and converted with the GMAC concordance), GPA, years of experience, industry, round, home state and US/non-US status.</li>
   <li>Adjust the sliders directly. Every chart updates immediately.</li>
-  <li>Use the dropdown to add schools from the 2026 U.S. News top 25 (26 schools, because of a tie at #25), plus Rice Jones. Remove any school with its button.</li>
+  <li>Use the dropdown to add schools from the 2026 U.S. News top 25 (26 schools, because of a tie at #25), plus Rice Jones and Stevens Institute of Technology. Remove any school with its button.</li>
   <li>Read each card: the large number is the <strong>median</strong> of the distribution, and the highlighted bar is the bin containing it.</li>
 </ol>
 
@@ -88,6 +88,10 @@
 <h2>Per-school data coverage</h2>
 <table id="covTbl"><thead><tr><th>School</th><th class="num">Tracker decisions</th><th class="num">Official accept rate</th><th class="num">Bias offset</th><th>Scholarship calibration</th></tr></thead><tbody></tbody></table>
 <p>Schools with fewer than 20 decisions rely mostly on the pooled model. UT Dallas Jindal shows official facts only, because it publishes no class GMAT figure and has almost no tracker data.</p>
+<h3 id="stevens">Stevens Institute of Technology</h3>
+<p>Stevens (U.S. News 2026 #72, tie) was added on request. It has no tracker decisions, so its card uses the pooled model with the pooled self-report correction, the same treatment as Georgia Terry. Its school context comes from the <a href="https://poetsandquants.com/2026/08/02/acceptance-rates-yield-apps-at-the-top-100-u-s-mba-programs-for-2026/">Poets&amp;Quants top-100 tables</a> (P&amp;Q rank #77): 687 applications and 384 admits for the class entering 2025 (55.9%), compared with 436 and 147 (33.7%) in 2024 and 516 and 193 (37.4%) in 2023.</p>
+<p>Neither Stevens nor P&amp;Q publishes a class GMAT, so the reference uses a third-party GMAT Classic average of 594 from <a href="https://www.campusreel.org/mba-programs/guides/stevens-institute-of-technology-mba-mba-profile-acceptance-rate-gmat-scores">CampusReel</a>, converted to Focus 555. <a href="https://www.beatthegmat.com/mba/school/stevens-institute-of-technology">BeatTheGMAT</a> lists 570; using it would raise the estimate slightly. Stevens's acceptance rate is far above every other school in the app, so the logistic model is extrapolating there. Treat the Stevens estimate as a rough range rather than a calibrated probability.</p>
+<p>The scholarship isn't modeled. Stevens's <a href="https://www.stevens.edu/page-basic/graduate-financing-frequently-asked-questions">graduate financing FAQ</a> describes merit awards for first-year, full-time, on-campus master's students, disclosed at admission, plus a $4,000 supplement, but publishes no award rates or averages. Tuition uses the <a href="https://www.stevens.edu/office-of-student-accounts/tuition-and-fees">2026–27 graduate full-time rate</a> of $22,995 per semester.</p>
 
 <h2>Known limitations</h2>
 <ul>
@@ -113,7 +117,8 @@ python pipeline/parse.py          # -> rows.json (structured fields only)
 python pipeline/build_ref.py      # -> school_ref.json from P&amp;Q tables
 python pipeline/train.py          # -> model.json, evaluation, coefficients, SHAP
 python pipeline/gen_schools.py    # -> data/schools.json (tuition and aid sources)
-python pipeline/export.py         # -> data/model.json for the site</pre>
+python pipeline/export.py         # -> data/model.json for the site
+python pipeline/add_stevens.py    # -> adds Stevens (pooled model, no retraining) to data/*.json</pre>
 <p>This explorer is not affiliated with GMAT Club, Poets&amp;Quants, U.S. News, GMAC or any school.</p>
 </main>
 <script>
@@ -134,7 +139,7 @@ fetch("data/model.json").then(r => r.json()).then(M => {
   fetch("data/schools.json").then(r => r.json()).then(S => {
     const rows = Object.keys(S).sort((a, b) => parseInt(S[a].usnews_rank) - parseInt(S[b].usnews_rank)).map(k => {
       const p = M.prior_correction[k] || {}; const o = M.sch_school_offsets[k] || {};
-      const basis = S[k].aid_basis === "need" ? "Need-based (not modeled)" : S[k].aid_basis === "official_only" ? "Not modeled" : S[k].aid_basis === "range_only" ? "Official range only (no reports)" : ({official: "Official aggregates", tracker_sample: "Tracker sample (may skew high)", pooled_only: "Pooled only"}[o.basis] || "–");
+      const basis = S[k].aid_basis === "need" ? "Need-based (not modeled)" : S[k].aid_basis === "official_only" ? "Not modeled" : S[k].aid_basis === "range_only" ? "Official range only (no reports)" : S[k].aid_basis === "policy_only" ? "Official policy only (no reports)" : ({official: "Official aggregates", tracker_sample: "Tracker sample (may skew high)", pooled_only: "Pooled only"}[o.basis] || "–");
       return `<tr><td>${S[k].name}</td><td class="num">${p.n ?? 0}</td><td class="num">${p.official_rate != null ? (100*p.official_rate).toFixed(1) + "%" : "–"}</td><td class="num">${p.offset != null ? p.offset.toFixed(2) : "–"}</td><td>${basis}</td></tr>`;
     });
     document.querySelector("#covTbl tbody").innerHTML = rows.join("");

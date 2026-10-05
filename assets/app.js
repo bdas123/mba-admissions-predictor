@@ -5,6 +5,8 @@ let selected = [];
 
 const $ = (id) => document.getElementById(id);
 const sigmoid = (z) => 1 / (1 + Math.exp(-z));
+// aid bases with no scholarship model: need-based, official range only, official policy only
+const noSchModel = (info) => ["need", "range_only", "policy_only"].includes(info.aid_basis);
 const pct = (v, d = 0) => (100 * v).toFixed(d) + "%";
 const usd = (v) => (v < 500 ? "$0" : "$" + Math.round(v / 1000).toLocaleString() + "k");
 function quantile(arr, q) {
@@ -112,8 +114,8 @@ function render() {
     const mi = h.bins.findIndex(([a, b]) => med >= a && med < b);
     drawChart(`ca-${s}`, h.labels, h.counts, mi, { xTitle: "Estimated chance of admission (%)", tip: (c) => `${c.raw} of 300 model refits` });
 
-    if (info.aid_basis === "need" || info.aid_basis === "range_only") {
-      $(`sch-med-${s}`).textContent = info.aid_basis === "need" ? "Need-based" : "Official range only";
+    if (noSchModel(info)) {
+      $(`sch-med-${s}`).textContent = { need: "Need-based", range_only: "Official range only", policy_only: "Official policy only" }[info.aid_basis];
       $(`sch-rng-${s}`).textContent = "Not predicted from your stats";
       continue;
     }
@@ -177,7 +179,7 @@ function cardHTML(s) {
     return head + `<p class="need">No model estimate: this program publishes no class GMAT figure and has almost no tracker decisions, so an estimate would be invented. Official facts: ${info.aid_fact} <a href="${info.aid_src}" target="_blank" rel="noopener">UT Dallas</a></p>`;
   }
   const off = M.sch_school_offsets[s] || {};
-  const flag = info.aid_basis === "need" || info.aid_basis === "range_only" ? "" : off.basis === "official" ? "Calibrated to official aid statistics." : off.basis === "pooled_only" ? "Too few school-specific reports: pooled estimate only." : "Calibrated to tracker reports, which likely skew high.";
+  const flag = noSchModel(info) ? "" : off.basis === "official" ? "Calibrated to official aid statistics." : off.basis === "pooled_only" ? "Too few school-specific reports: pooled estimate only." : "Calibrated to tracker reports, which likely skew high.";
   const n = (M.prior_correction[s] || {}).n || 0;
   return head + `
     <div class="pair">
@@ -191,10 +193,10 @@ function cardHTML(s) {
         <div class="kicker">Scholarship if admitted · median</div>
         <div class="big" id="sch-med-${s}">–</div>
         <div class="sub" id="sch-rng-${s}"></div>
-        ${info.aid_basis === "need" || info.aid_basis === "range_only" ? `<p class="need">${info.aid_fact} <a href="${info.aid_src}" target="_blank" rel="noopener">official source</a></p>` : `<div class="chart"><canvas id="cs-${s}"></canvas></div>`}
+        ${noSchModel(info) ? `<p class="need">${info.aid_fact} <a href="${info.aid_src}" target="_blank" rel="noopener">official source</a></p>` : `<div class="chart"><canvas id="cs-${s}"></canvas></div>`}
       </section>
     </div>
-    <footer>${n} school-specific tracker decisions in training${n < 20 ? " (thin: leans on the pooled model)" : ""}. ${flag} ${info.aid_basis === "need" || info.aid_basis === "range_only" ? "" : `Official: ${info.aid_fact} <a href="${info.aid_src}" target="_blank" rel="noopener">source</a> · `}Dollar figures use ${info.tuition_label}, $${info.tuition.toLocaleString()} × 2 years (<a href="${info.tuition_src}" target="_blank" rel="noopener">source</a>).</footer>`;
+    <footer>${info.caveat ? `<strong>${info.caveat}</strong> (<a href="${info.caveat_src}" target="_blank" rel="noopener">GMAT proxy source</a>) ` : ""}${n} school-specific tracker decisions in training${n < 20 ? " (thin: leans on the pooled model)" : ""}. ${flag} ${noSchModel(info) ? "" : `Official: ${info.aid_fact} <a href="${info.aid_src}" target="_blank" rel="noopener">source</a> · `}Dollar figures use ${info.tuition_label}, $${info.tuition.toLocaleString()} × 2 years (<a href="${info.tuition_src}" target="_blank" rel="noopener">source</a>).</footer>`;
 }
 
 function buildCards() {

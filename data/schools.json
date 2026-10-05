@@ -403,5 +403,22 @@
   "profile": "Entering 2025: 1,315 applications, 34.2% admitted",
   "profile_src": "https://poetsandquants.com/2026/08/02/acceptance-rates-yield-apps-at-the-top-100-u-s-mba-programs-for-2026/",
   "usnews_src": "https://www.clearadmit.com/mba-rankings/usnews/"
+ },
+ "Stevens": {
+  "name": "Stevens Institute of Technology",
+  "usnews_rank": "72 (tie)",
+  "state": "NJ",
+  "tuition": 45990,
+  "tuition_resident": null,
+  "tuition_label": "2026\u201327 graduate full-time rate ($22,995 per semester; Stevens lists no MBA-specific rate)",
+  "tuition_src": "https://www.stevens.edu/office-of-student-accounts/tuition-and-fees",
+  "aid_basis": "policy_only",
+  "aid_fact": "Stevens offers merit awards to first-year master\u2019s students who apply as full-time, on-campus students. Any award is disclosed at admission and paid over three semesters, and the Office of Graduate Education adds $4,000 in the third semester. Stevens publishes no MBA award rates or averages and there are no tracker reports, so the scholarship isn\u2019t modeled.",
+  "aid_src": "https://www.stevens.edu/page-basic/graduate-financing-frequently-asked-questions",
+  "profile": "Entering 2025: 687 applications, 55.9% admitted",
+  "profile_src": "https://poetsandquants.com/2026/08/02/acceptance-rates-yield-apps-at-the-top-100-u-s-mba-programs-for-2026/",
+  "usnews_src": "https://www.stevens.edu/news/stevens-schools-ranked-in-top-80-nationally-in-2026-u-s-news-best-graduate",
+  "caveat": "Extrapolated estimate: there are no Stevens tracker decisions, its 55.9% acceptance rate is far above every other school in the app (the highest is 37.9%), and its class GMAT reference (Focus 555) is a third-party proxy, not a published figure. Admit rates also jumped from 33.7% (2024) to 55.9% (2025). Read this as a rough range.",
+  "caveat_src": "https://www.campusreel.org/mba-programs/guides/stevens-institute-of-technology-mba-mba-profile-acceptance-rate-gmat-scores"
  }
 }

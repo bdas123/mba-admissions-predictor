@@ -24,6 +24,7 @@ FOCUS5 = {"Stanford GSB": "Stanford GSB", "Sloan MIT": "MIT Sloan", "Booth": "Ch
           "Jones Rice": "Rice Jones", "McCombs": "UT Austin McCombs"}
 NEED_BASED = {"Stanford GSB", "Harvard"}
 # Schools offered in the app: 2026 U.S. News top 25 (26 with ties) plus Rice Jones (#29, requested).
+# Stevens (#72, requested) is appended after export by pipeline/add_stevens.py; it has no tracker decisions.
 APP_SCHOOLS = ["Stanford GSB", "Wharton", "Booth", "Kellogg", "Harvard", "Sloan MIT", "Columbia", "Stern", "Tuck", "Haas",
                "Yale", "Darden", "Ross (Michigan)", "Fuqua", "Johnson (Cornell)", "Tepper", "Owen Vanderbilt", "McCombs",
                "Anderson", "Foster", "Kelley", "Kenan-Flagler", "Goizueta", "Marshall (USC)", "Terry Georgia", "Jones Rice"]  # fellowships awarded on financial need only
